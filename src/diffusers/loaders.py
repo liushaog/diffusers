@@ -150,7 +150,8 @@ class UNet2DConditionLoadersMixin:
 
         model_file = None
         if not isinstance(pretrained_model_name_or_path_or_dict, dict):
-            if (is_safetensors_available() and weight_name is None) or weight_name.endswith(".safetensors"):
+                    
+            if (is_safetensors_available() and weight_name is None) or (not weight_name is None and weight_name.endswith(".safetensors")):
                 if weight_name is None:
                     weight_name = LORA_WEIGHT_NAME_SAFE
                 try:
@@ -265,6 +266,13 @@ class UNet2DConditionLoadersMixin:
         # Save the model
         state_dict = model_to_save.state_dict()
 
+        # default weights_name setting for none
+        if weights_name is None:
+            if safe_serialization:
+                weights_name = LORA_WEIGHT_NAME_SAFE
+            else:
+                weights_name = LORA_WEIGHT_NAME
+
         # Clean the folder from a previous save
         for filename in os.listdir(save_directory):
             full_filename = os.path.join(save_directory, filename)
@@ -274,11 +282,7 @@ class UNet2DConditionLoadersMixin:
             if filename.startswith(weights_no_suffix) and os.path.isfile(full_filename) and is_main_process:
                 os.remove(full_filename)
 
-        if weights_name is None:
-            if safe_serialization:
-                weights_name = LORA_WEIGHT_NAME_SAFE
-            else:
-                weights_name = LORA_WEIGHT_NAME
+        
 
         # Save the model
         save_function(state_dict, os.path.join(save_directory, weights_name))
